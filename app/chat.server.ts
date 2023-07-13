@@ -50,3 +50,17 @@ export function removeUser(user: string) {
 export function doesUserExist(user: string) {
   return users.has(user)
 }
+
+/**
+ * Returns a list of all users currently logged in.
+ */
+export function getUsers() {
+  return Array.from(users.keys())
+}
+
+/**
+ * Sends a message to the chat on behalf of a user
+ */
+export function sendMessage(user: string, message: string) {
+  chatEvents.emit('message', { user, message })
+}

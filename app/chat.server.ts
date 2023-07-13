@@ -35,3 +35,18 @@ export function addUser(user: string) {
   users.set(user, undefined)
   chatEvents.emit('user-joined', user)
 }
+
+/**
+ * Removes a user from the chat.
+ */
+export function removeUser(user: string) {
+  users.delete(user)
+  chatEvents.emit('user-left', user)
+}
+
+/**
+ * Checks if a user is currently logged in.
+ */
+export function doesUserExist(user: string) {
+  return users.has(user)
+}

@@ -49,7 +49,13 @@ export default function Chat() {
   const [users, setUsers] = useState<Set<string>>(
     () => new Set(loaderData.users)
   )
-  
+
+  useEffect(() => {
+    if (transition.state === 'submitting') {
+      formRef.current?.reset()
+    }
+  }, [transition.state])
+
   useEffect(() => {
     const eventSource = new EventSource('/live/chat')
 
@@ -58,6 +64,26 @@ export default function Chat() {
       setMessages(messages => [
         ...messages,
         { user: data.user, message: data.message },
+      ])
+    })
+
+    eventSource.addEventListener('user-joined', event => {
+      const user = event.data
+
+      setUsers(users => new Set([...users, user]))
+      setMessages(messages => [
+        ...messages,
+        { user: 'System', message: `"${user}" joined the chat` },
+      ])
+    })
+
+    eventSource.addEventListener('user-left', event => {
+      const user = event.data
+
+      setUsers(users => new Set([...users].filter(u => u !== user)))
+      setMessages(messages => [
+        ...messages,
+        { user: 'System', message: `"${user}" left the chat` },
       ])
     })
 
@@ -86,6 +112,22 @@ export default function Chat() {
         <div title={`Users: ${[...users].join(', ')}`}>
           <strong>{users.size}</strong> Logged in users
         </div>
+      </section>
+      <section>
+        <ul>
+          {messages.map(({ user, message }, index) => (
+            <li key={index}>
+              <strong>{user}: </strong>
+              {message}
+            </li>
+          ))}
+        </ul>
+        <Form ref={formRef} method="post" replace>
+          <input type="text" name="message" />
+          <button type="submit" name="_action" value="send-message">
+            Send
+          </button>
+        </Form>
       </section>
     </main>
   )

@@ -39,3 +39,54 @@ export const action: ActionFunction = async ({ request }) => {
 
   return null
 }
+
+
+export default function Chat() {
+  const loaderData = useLoaderData<LoaderData>()
+  const transition = useTransition()
+  const formRef = useRef<HTMLFormElement>(null)
+  const [messages, setMessages] = useState<ChatMessage[]>([])
+  const [users, setUsers] = useState<Set<string>>(
+    () => new Set(loaderData.users)
+  )
+  
+  useEffect(() => {
+    const eventSource = new EventSource('/live/chat')
+
+    eventSource.addEventListener('message', event => {
+      const data = JSON.parse(event.data)
+      setMessages(messages => [
+        ...messages,
+        { user: data.user, message: data.message },
+      ])
+    })
+
+    return () => eventSource.close()
+  }, [])
+
+  return (
+    <main style={{ fontFamily: 'system-ui, sans-serif', lineHeight: '1.4' }}>
+      <header style={{ marginBlock: '1rem' }}>
+        <h1 style={{ marginBlock: '0' }}>Remix Chat</h1>
+        <Form method="post">
+          <button
+            type="submit"
+            name="_action"
+            value="logout"
+            title={`${loaderData.user}, log out`}
+          >
+            Logout
+          </button>
+        </Form>
+      </header>
+      <section>
+        <div>
+          Logged in as <strong>{loaderData.user}</strong>
+        </div>
+        <div title={`Users: ${[...users].join(', ')}`}>
+          <strong>{users.size}</strong> Logged in users
+        </div>
+      </section>
+    </main>
+  )
+}

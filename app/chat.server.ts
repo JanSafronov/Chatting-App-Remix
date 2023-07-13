@@ -17,3 +17,21 @@ global.users =
 global.chatEvents = global.chatEvents || new EventEmitter()
 
 export const chat = chatEvents
+
+/**
+ * Checks if a user is currently logged in, and if not, redirects to the login page.
+ * If the user is logged in, returns the user's name.
+ */
+export async function getSessionUser(request: Request): Promise<string> {
+  const session = await getSession(request.headers.get('Cookie'))
+  if (!session.get('user')) throw redirect('/')
+  return session.get('user')
+}
+
+/**
+ * Adds a user to the chat.
+ */
+export function addUser(user: string) {
+  users.set(user, undefined)
+  chatEvents.emit('user-joined', user)
+}

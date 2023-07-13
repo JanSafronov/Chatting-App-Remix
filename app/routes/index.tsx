@@ -13,6 +13,7 @@ export const loader: LoaderFunction = async ({ request }) => {
   if (session.has('user')) {
     throw redirect('/chat')
   }
+  return null
 }
 
 const MAX_USERNAME_LENGTH = 20
@@ -20,6 +21,26 @@ const MAX_USERNAME_LENGTH = 20
 export const action: ActionFunction = async ({ request }) => {
   const session = await getSession(request.headers.get('Cookie'))
   const formData = await request.formData()
+
+  const user = String(formData.get('user')).slice(0, MAX_USERNAME_LENGTH)
+  if (
+    user.length <= 0 ||
+    user.toLowerCase() === 'system' ||
+    doesUserExist(user)
+  ) {
+    return json<ActionData>({
+      error: 'Invalid username or user already exists',
+    })
+  }
+
+  session.set('user', user)
+
+  return redirect('/chat', {
+    headers: {
+      'Set-Cookie': await commitSession(session),
+    },
+  })
+}
 
 export default function Index() {
   const actionData = useActionData<ActionData>()
